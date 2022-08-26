@@ -9,3 +9,6 @@ dependencies:
   - setuptools >=31.0.1
   - toolz >=0.8.1
   - cython
+  - zstandard
+  - pip:
+    - conda-package-streaming

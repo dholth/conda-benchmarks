@@ -12,3 +12,5 @@ dependencies:
   - zstandard
   - pip:
     - conda-package-streaming
+    - requests-cache
+    - jsonpatch

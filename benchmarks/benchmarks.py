@@ -5,6 +5,7 @@ import pathlib
 from tempfile import TemporaryDirectory
 import time
 from tkinter.tix import MAX
+from typing import List
 
 from conda_package_handling.api import extract
 from conda_package_streaming import package_streaming
@@ -15,6 +16,8 @@ MAXIMUM_SECONDS = 8.0
 
 
 class TrackSuite:
+    unit = "speedup"
+
     def setup(self):
         self.condas = list(
             pathlib.Path("~/miniconda3/pkgs").expanduser().glob("*.conda")
@@ -56,7 +59,7 @@ class TrackSuite:
 
             return handling_time / cps_time
 
-
+    # could potentially be swapped with env_nobuild in asv.conf instead
     def track_streaming_versus_handling_tarbz2(self):
         """
         Compare conda-package-streaming time versus conda-package-handling (should be a number > 1)
@@ -105,7 +108,7 @@ def extract_handling(base, condas, time_limit=MAXIMUM_SECONDS):
 
     return extracted
 
-def extract_streaming(base, condas, time_limit=MAXIMUM_SECONDS):
+def extract_streaming(base, condas: List[pathlib.Path], time_limit=MAXIMUM_SECONDS):
     """
     Extract a bunch of .conda with conda-package-streaming
     """
@@ -122,13 +125,14 @@ def extract_streaming(base, condas, time_limit=MAXIMUM_SECONDS):
             ):
                 tar.extractall(dest_dir)
                 break
-            if conda.name.endswith(".tar.bz2"):
-                break  # .tar.bz2 will be totally extracted, doesn't filter by component here
-            for tar, _member in package_streaming.stream_conda_component(
-                str(conda), fp, component="pkg"
-            ):
-                tar.extractall(dest_dir)
-                break
+            if not conda.name.endswith(".tar.bz2"):
+                # .tar.bz2's don't filter by component, and would be already
+                # extracted
+                for tar, _member in package_streaming.stream_conda_component(
+                    str(conda), fp, component="pkg"
+                ):
+                    tar.extractall(dest_dir)
+                    break
         extracted.append(conda)
         if time.monotonic() - limit > time_limit:
             break

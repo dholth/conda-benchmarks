@@ -6,7 +6,7 @@
         "params": [],
         "timeout": 60.0,
         "type": "track",
-        "unit": "unit",
+        "unit": "speedup",
         "version": "6e8338ab5a696ba9bbadb68e4e3e609f6749ee172e4b866673fce21015bfe987"
     },
     "benchmarks.TrackSuite.track_streaming_versus_handling_tarbz2": {
@@ -16,7 +16,7 @@
         "params": [],
         "timeout": 60.0,
         "type": "track",
-        "unit": "unit",
+        "unit": "speedup",
         "version": "9b54b125cd259447291efcc848a80203d76981bdad876026a3b877ef3083fe39"
     },
     "version": 2

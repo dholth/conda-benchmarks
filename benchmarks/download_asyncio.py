@@ -116,9 +116,14 @@ class TimeDownloadPackages:
         asyncio.run(main(self.fixup_urls(), self.temppath))
 
     def time_download_serial(self):
+        # does teardown/setup not run for each function in this class
+        target_base = self.temppath / 's'
+        target_base.mkdir()
         for package in self.fixup_urls():
             name = package['url'].rsplit('/', 1)[-1]
-            conda.exports.download(package["url"], self.temppath / name)
+            target = target_base / name
+            assert not target.exists()
+            conda.exports.download(package["url"], target)
 
 if __name__ == "__main__":
     import logging

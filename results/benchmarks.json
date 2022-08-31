@@ -37,7 +37,7 @@
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_serial": {
-        "code": "class TimeDownloadPackages:\n    def time_download_serial(self):\n        for package in self.fixup_urls():\n            name = package['url'].rsplit('/', 1)[-1]\n            conda.exports.download(package[\"url\"], self.temppath / name)\n\n    def setup(self):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self.server = test_server.run_on_random_port()\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "code": "class TimeDownloadPackages:\n    def time_download_serial(self):\n        # does teardown/setup not run for each function in this class\n        target_base = self.temppath / 's'\n        target_base.mkdir()\n        for package in self.fixup_urls():\n            name = package['url'].rsplit('/', 1)[-1]\n            target = target_base / name\n            assert not target.exists()\n            conda.exports.download(package[\"url\"], target)\n\n    def setup(self):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self.server = test_server.run_on_random_port()\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
         "min_run_count": 2,
         "name": "download_asyncio.TimeDownloadPackages.time_download_serial",
         "number": 0,
@@ -50,7 +50,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "f7a5e53e9b3abdaa3ec1afe59da08e287ef08fb63ba62223346dd5b0ad478e8e",
+        "version": "ba173f9ff03c4320800e1e0aa782de9b35ae31771d762b19dda51726c9c126e4",
         "warmup_time": -1
     },
     "version": 2

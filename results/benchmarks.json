@@ -20,7 +20,7 @@
         "version": "9b54b125cd259447291efcc848a80203d76981bdad876026a3b877ef3083fe39"
     },
     "download_asyncio.TimeDownloadPackages.time_download_aiohttp": {
-        "code": "class TimeDownloadPackages:\n    def time_download_aiohttp(self, latency=0.0):\n        target_base = Path(mkdtemp(dir=self.temppath)) # no cleanup here\n        asyncio.run(main(self.fixup_urls(), target_base))\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "code": "class TimeDownloadPackages:\n    def time_download_aiohttp(self, latency=0.0):\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        asyncio.run(main(self.fixup_urls(), target_base))\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
         "min_run_count": 2,
         "name": "download_asyncio.TimeDownloadPackages.time_download_aiohttp",
         "number": 0,
@@ -36,15 +36,15 @@
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
-        "setup_cache_key": "download_asyncio:111",
+        "setup_cache_key": "download_asyncio:113",
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "cc438cd0c3db83b75719ed63d33d3080599a0498aeb60600fef6c68d09402a91",
+        "version": "2aa08e23f81f2abd97f19e2127536a33058b1ff6b36a5807b522d43740c9e090",
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_serial": {
-        "code": "class TimeDownloadPackages:\n    def time_download_serial(self, latency=0.0):\n        # does teardown/setup not run for each function in this class\n        target_base = Path(mkdtemp(dir=self.temppath)) # no cleanup here\n        for package in self.fixup_urls():\n            name = package['url'].rsplit('/', 1)[-1]\n            target = target_base / name\n            assert not target.exists()\n            conda.exports.download(package[\"url\"], target)\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "code": "class TimeDownloadPackages:\n    def time_download_serial(self, latency=0.0):\n        # does teardown/setup not run for each function in this class\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        for package in self.fixup_urls():\n            name = package[\"url\"].rsplit(\"/\", 1)[-1]\n            target = target_base / name\n            assert not target.exists()\n            conda.exports.download(package[\"url\"], target)\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
         "min_run_count": 2,
         "name": "download_asyncio.TimeDownloadPackages.time_download_serial",
         "number": 0,
@@ -60,11 +60,35 @@
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
-        "setup_cache_key": "download_asyncio:111",
+        "setup_cache_key": "download_asyncio:113",
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "5aa98190749d1df09ad7e98f19b839abf3dd75bac60148fac40db6351a32b253",
+        "version": "2fd5fa7279b3627fd12bfc57cbf078fdfe05ebb2397031d5a61ba69803c84084",
+        "warmup_time": -1
+    },
+    "download_asyncio.TimeDownloadPackages.time_download_threads": {
+        "code": "class TimeDownloadPackages:\n    def time_download_threads(self, latency=0.0):\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        targets = []\n        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as tpe:\n            for package in self.fixup_urls():\n                name = package[\"url\"].rsplit(\"/\", 1)[-1]\n                target = target_base / name\n                assert not target.exists()\n                targets.append(target)\n                tpe.submit(conda.exports.download, package[\"url\"], target)\n    \n        assert all(target.exists() for target in targets)\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "min_run_count": 2,
+        "name": "download_asyncio.TimeDownloadPackages.time_download_threads",
+        "number": 0,
+        "param_names": [
+            "latency"
+        ],
+        "params": [
+            [
+                "0.0",
+                "0.01"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "download_asyncio:113",
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "5fcbf68e7f77259df75c851521dde5a797b82b87d7ff9628e5f20fe996987d90",
         "warmup_time": -1
     },
     "version": 2

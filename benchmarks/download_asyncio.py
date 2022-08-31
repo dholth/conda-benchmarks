@@ -14,7 +14,7 @@ import asyncio
 import hashlib
 import logging
 import requests
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
@@ -32,6 +32,8 @@ import conda.exports
 log = logging.getLogger(__name__)
 
 PLATFORM = "osx-64"  # adjust based on conda-lock.yml
+
+MAX_WORKERS = 10
 
 cheap = yaml.load(
     (Path(__file__).parent / "../conda-lock.yml").open(), Loader=yaml.SafeLoader
@@ -131,21 +133,36 @@ class TimeDownloadPackages:
         packages = []
         for package in cheap["package"]:
             name = package["url"].rsplit("/", 1)[-1]
-            packages.append({**package, "url":f"http://127.0.0.1:{port}/osx-64/{name}"})
+            packages.append(
+                {**package, "url": f"http://127.0.0.1:{port}/osx-64/{name}"}
+            )
         return packages
 
     def time_download_aiohttp(self, latency=0.0):
-        target_base = Path(mkdtemp(dir=self.temppath)) # no cleanup here
+        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here
         asyncio.run(main(self.fixup_urls(), target_base))
 
     def time_download_serial(self, latency=0.0):
         # does teardown/setup not run for each function in this class
-        target_base = Path(mkdtemp(dir=self.temppath)) # no cleanup here
+        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here
         for package in self.fixup_urls():
-            name = package['url'].rsplit('/', 1)[-1]
+            name = package["url"].rsplit("/", 1)[-1]
             target = target_base / name
             assert not target.exists()
             conda.exports.download(package["url"], target)
+
+    def time_download_threads(self, latency=0.0):
+        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here
+        targets = []
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as tpe:
+            for package in self.fixup_urls():
+                name = package["url"].rsplit("/", 1)[-1]
+                target = target_base / name
+                assert not target.exists()
+                targets.append(target)
+                tpe.submit(conda.exports.download, package["url"], target)
+
+        assert all(target.exists() for target in targets)
 
 if __name__ == "__main__":
     import logging

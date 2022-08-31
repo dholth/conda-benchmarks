@@ -19,5 +19,39 @@
         "unit": "speedup",
         "version": "9b54b125cd259447291efcc848a80203d76981bdad876026a3b877ef3083fe39"
     },
+    "download_asyncio.TimeDownloadPackages.time_download_aiohttp": {
+        "code": "class TimeDownloadPackages:\n    def time_download_aiohttp(self):\n        asyncio.run(main(self.fixup_urls(), self.temppath))\n\n    def setup(self):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self.server = test_server.run_on_random_port()\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "min_run_count": 2,
+        "name": "download_asyncio.TimeDownloadPackages.time_download_aiohttp",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "download_asyncio:94",
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "867910577f383dc87602abe20090a0d99f820be3f51a2d66e7fc6bb95a41ef09",
+        "warmup_time": -1
+    },
+    "download_asyncio.TimeDownloadPackages.time_download_serial": {
+        "code": "class TimeDownloadPackages:\n    def time_download_serial(self):\n        for package in self.fixup_urls():\n            name = package['url'].rsplit('/', 1)[-1]\n            conda.exports.download(package[\"url\"], self.temppath / name)\n\n    def setup(self):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self.server = test_server.run_on_random_port()\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "min_run_count": 2,
+        "name": "download_asyncio.TimeDownloadPackages.time_download_serial",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "download_asyncio:94",
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "f7a5e53e9b3abdaa3ec1afe59da08e287ef08fb63ba62223346dd5b0ad478e8e",
+        "warmup_time": -1
+    },
     "version": 2
 }

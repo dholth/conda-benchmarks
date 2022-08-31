@@ -5,28 +5,67 @@ Change contents to simulate an updating repository.
 """
 
 from pathlib import Path
-from threading import Thread
+import multiprocessing
+import socket
 
 import time
 import flask
 
-from werkzeug.serving import make_server
+from werkzeug.serving import make_server, prepare_socket
 
 app = flask.Flask(__name__)
 
 base = Path(__file__).parents[1] / "env" / "conda-asyncio"
 
+LATENCY = 0
+
+
+@app.route("/shutdown")
+def shutdown():
+    server.shutdown()
+    return "Goodbye"
+
+
+@app.route("/latency/<float:delay>")
+def latency(delay):
+    """
+    Set delay before each file response.
+    """
+    global LATENCY
+    LATENCY = delay
+    return "OK"
+
+
 # flask.send_from_directory(directory, path, **kwargs)
 # Send a file from within a directory using send_file().
 @app.route("/<subdir>/<path:name>")
 def download_file(subdir, name):
+    time.sleep(LATENCY)
     # conditional=True is the default
     return flask.send_from_directory(base, name)
 
+
+def make_server_with_socket(socket: socket.socket):
+    global server
+    assert isinstance(socket.fileno(), int)
+    # processes may break global latency setting
+    server = make_server(
+        "127.0.0.1", port=0, app=app, fd=socket.fileno(), threaded=True
+    )
+    server.serve_forever()
+
+
 def run_on_random_port():
-    server = make_server(host="127.0.0.1", port=0, app=app, threaded=True)
-    Thread(target=server.serve_forever, daemon=True).start()
-    return server
+    """
+    Run in a new process to minimize interference with test.
+    """
+    socket = prepare_socket("127.0.0.1", 0)
+    process = multiprocessing.Process(
+        target=make_server_with_socket, args=(socket,), daemon=True
+    )
+    process.start()
+    return socket
+
 
 if __name__ == "__main__":
     print(run_on_random_port())

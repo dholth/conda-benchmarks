@@ -13,10 +13,11 @@ In benchmarking I found this to be as fast or faster than mamba's implementation
 import asyncio
 import hashlib
 import logging
+import requests
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkdtemp
 from typing import Dict, List
 from urllib.parse import urlparse
 
@@ -90,18 +91,27 @@ async def download_url(session: aiohttp.ClientSession, sha256: str, fp: Path, ur
 
 
 class TimeDownloadPackages:
-    def setup(self):
+    params = [0.0, 0.01]
+    param_names = ["latency"]
+
+    def setup(self, latency=0.0):
         self.tempdir = TemporaryDirectory("aiohttp")
         self.temppath = Path(self.tempdir.name)
         log.info("Download to %s", self.tempdir)
-        self.server = test_server.run_on_random_port()
+        self._port = test_server.run_on_random_port().getsockname()[1]
+        requests.get(f"http://127.0.0.1:{self.port}/latency/{latency}")
 
-    def teardown(self):
+    def teardown(self, latency=0.0):
         self.tempdir.cleanup()
+
+    @property
+    def port(self):
+        return self._port
 
     def setup_cache(self):
         """
         Called once per session.
+        self.value = x doesn't work here; benchmarks run in separate processes.
         """
         test_server.base.mkdir(parents=True, exist_ok=True)
         for package in cheap["package"]:
@@ -109,24 +119,28 @@ class TimeDownloadPackages:
             if not (test_server.base / name).exists():
                 conda.exports.download(package["url"], test_server.base / name)
 
+    # Not a feature of ASV
+    # def teardown_cache(self):
+    #     requests.get(f"http://127.0.0.1:{self.port}/shutdown")
+
     def fixup_urls(self):
         """
         Retarget urls against our local test server.
         """
-        port = self.server.port
+        port = self.port
         packages = []
         for package in cheap["package"]:
             name = package["url"].rsplit("/", 1)[-1]
             packages.append({**package, "url":f"http://127.0.0.1:{port}/osx-64/{name}"})
         return packages
 
-    def time_download_aiohttp(self):
-        asyncio.run(main(self.fixup_urls(), self.temppath))
+    def time_download_aiohttp(self, latency=0.0):
+        target_base = Path(mkdtemp(dir=self.temppath)) # no cleanup here
+        asyncio.run(main(self.fixup_urls(), target_base))
 
-    def time_download_serial(self):
+    def time_download_serial(self, latency=0.0):
         # does teardown/setup not run for each function in this class
-        target_base = self.temppath / 's'
-        target_base.mkdir()
+        target_base = Path(mkdtemp(dir=self.temppath)) # no cleanup here
         for package in self.fixup_urls():
             name = package['url'].rsplit('/', 1)[-1]
             target = target_base / name

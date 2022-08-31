@@ -1,5 +1,13 @@
 """
 https://github.com/conda/conda/issues/11608
+
+Code adapted from shughes-uk
+
+I wrote a hacky little experiment that pre-populates the pkgs cache using asyncio to download packages listed in a conda-lock lockfile. I found it to be much faster than the default conda implementation. I suspect it would be faster than using multiple threads too.
+
+Mostly looking to optimize start time for dask clusters, I can create the environment and wrap it up as a docker image, but it ends up being slower than doing this.
+
+In benchmarking I found this to be as fast or faster than mamba's implementation.
 """
 
 import asyncio

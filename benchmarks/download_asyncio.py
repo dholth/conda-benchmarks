@@ -9,7 +9,7 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict
+from typing import Dict, List
 from urllib.parse import urlparse
 
 import aiofiles
@@ -39,7 +39,7 @@ def extract(sha256: str, file: str, target: str):
     api.extract(file, target)
 
 
-async def main(packages: Dict, root: Path):
+async def main(packages: List[Dict], root: Path):
     async with aiohttp.ClientSession() as session:
         tasks = []
         urls = []
@@ -102,16 +102,23 @@ class TimeDownloadPackages:
                 conda.exports.download(package["url"], test_server.base / name)
 
     def fixup_urls(self):
+        """
+        Retarget urls against our local test server.
+        """
         port = self.server.port
+        packages = []
         for package in cheap["package"]:
-            name = package["url"].rpartition("/")[-1]
-            package["url"] = f"http://127.0.0.1:{port}/osx-64/{name}"
+            name = package["url"].rsplit("/", 1)[-1]
+            packages.append({**package, "url":f"http://127.0.0.1:{port}/osx-64/{name}"})
+        return packages
 
     def time_download_aiohttp(self):
-        self.fixup_urls()
-        print(cheap["package"])
-        asyncio.run(main(cheap["package"], self.temppath))
+        asyncio.run(main(self.fixup_urls(), self.temppath))
 
+    def time_download_serial(self):
+        for package in self.fixup_urls():
+            name = package['url'].rsplit('/', 1)[-1]
+            conda.exports.download(package["url"], self.temppath / name)
 
 if __name__ == "__main__":
     import logging

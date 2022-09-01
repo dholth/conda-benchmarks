@@ -4,15 +4,18 @@
 import pathlib
 from tempfile import TemporaryDirectory
 import time
-from tkinter.tix import MAX
 from typing import List
 
 from conda_package_handling.api import extract
 from conda_package_streaming import package_streaming
 
+import re
+
 
 MINIMUM_PACKAGES = 10
 MAXIMUM_SECONDS = 8.0
+
+STEM_FROM_CONDA = re.compile(r"(?P<stem>.*)(?P<ext>(\.conda|\.tar\.bz2))")
 
 
 class TrackSuite:
@@ -50,7 +53,9 @@ class TrackSuite:
             print(f"'streaming' extracted {actual} out of {attempted} .conda's")
 
             begin = time.monotonic()
-            self.condas = extract_handling(handling, self.condas, time_limit=cps_time * 4)
+            self.condas = extract_handling(
+                handling, self.condas, time_limit=cps_time * 4
+            )
             end = time.monotonic()
             handling_time = end - begin
 
@@ -81,7 +86,9 @@ class TrackSuite:
             print(f"'streaming' extracted {actual} out of {attempted} .tar.bz2's")
 
             begin = time.monotonic()
-            self.tarbz2 = extract_handling(handling, self.tarbz2, time_limit=cps_time * 4)
+            self.tarbz2 = extract_handling(
+                handling, self.tarbz2, time_limit=cps_time * 4
+            )
             end = time.monotonic()
             handling_time = end - begin
 
@@ -89,6 +96,15 @@ class TrackSuite:
             print(f"'handling' extracted {actual} out of {attempted} .tar.bz2's")
 
             return handling_time / cps_time
+
+
+def conda_stem(conda: pathlib.Path):
+    match = STEM_FROM_CONDA.match(conda.name)
+    if not match:
+        raise ValueError("Unsupported extension")
+    stem = match.group("stem")
+    return stem
+
 
 def extract_handling(base, condas, time_limit=MAXIMUM_SECONDS):
     """
@@ -98,7 +114,7 @@ def extract_handling(base, condas, time_limit=MAXIMUM_SECONDS):
     extracted = []
     base = pathlib.Path(base)
     for conda in condas:
-        stem = conda.stem
+        stem = conda_stem(conda)
         dest_dir = base / stem
         dest_dir.mkdir(exist_ok=True)
         extract(str(conda), dest_dir)
@@ -108,6 +124,7 @@ def extract_handling(base, condas, time_limit=MAXIMUM_SECONDS):
 
     return extracted
 
+
 def extract_streaming(base, condas: List[pathlib.Path], time_limit=MAXIMUM_SECONDS):
     """
     Extract a bunch of .conda with conda-package-streaming
@@ -116,7 +133,7 @@ def extract_streaming(base, condas: List[pathlib.Path], time_limit=MAXIMUM_SECON
     extracted = []
     base = pathlib.Path(base)
     for conda in condas:
-        stem = conda.stem
+        stem = conda_stem(conda)
         dest_dir = base / stem
         dest_dir.mkdir(exist_ok=True)
         with conda.open(mode="rb") as fp:
@@ -138,3 +155,19 @@ def extract_streaming(base, condas: List[pathlib.Path], time_limit=MAXIMUM_SECON
             break
 
     return extracted
+
+
+if __name__ == "__main__":
+    # extract to tmp for comparison
+    streaming = pathlib.Path("/tmp/conda-streaming")
+    handling = pathlib.Path("/tmp/conda-handling")
+
+    streaming.mkdir(exist_ok=True)
+    handling.mkdir(exist_ok=True)
+
+    ts = TrackSuite()
+    ts.setup()
+
+    # could differ if time runs out...
+    extract_streaming(streaming, ts.condas + ts.tarbz2, time_limit=60)
+    extract_handling(handling, ts.condas + ts.tarbz2, time_limit=60)

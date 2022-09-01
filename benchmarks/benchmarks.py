@@ -2,15 +2,13 @@
 # See "Writing benchmarks" in the asv docs for more information.
 
 import pathlib
-from tempfile import TemporaryDirectory
+import re
 import time
+from tempfile import TemporaryDirectory
 from typing import List
 
 from conda_package_handling.api import extract
 from conda_package_streaming import package_streaming
-
-import re
-
 
 MINIMUM_PACKAGES = 10
 MAXIMUM_SECONDS = 8.0

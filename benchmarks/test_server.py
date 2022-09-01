@@ -4,13 +4,12 @@ Flask-based conda repository server for testing.
 Change contents to simulate an updating repository.
 """
 
-from pathlib import Path
 import multiprocessing
 import socket
-
 import time
-import flask
+from pathlib import Path
 
+import flask
 from werkzeug.serving import make_server, prepare_socket
 
 app = flask.Flask(__name__)

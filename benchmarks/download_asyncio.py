@@ -13,7 +13,6 @@ In benchmarking I found this to be as fast or faster than mamba's implementation
 import asyncio
 import hashlib
 import logging
-import requests
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
@@ -23,11 +22,12 @@ from urllib.parse import urlparse
 
 import aiofiles
 import aiohttp
+import conda.exports
+import requests
 import yaml
 from conda_package_handling import api
 
 from . import test_server
-import conda.exports
 
 log = logging.getLogger(__name__)
 
@@ -163,6 +163,7 @@ class TimeDownloadPackages:
                 tpe.submit(conda.exports.download, package["url"], target)
 
         assert all(target.exists() for target in targets)
+
 
 if __name__ == "__main__":
     import logging

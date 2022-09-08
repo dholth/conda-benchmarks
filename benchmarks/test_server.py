@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 import flask
-from werkzeug.serving import make_server, prepare_socket
+from werkzeug.serving import WSGIRequestHandler, make_server, prepare_socket
 
 app = flask.Flask(__name__)
 
@@ -45,12 +45,22 @@ def download_file(subdir, name):
     return flask.send_from_directory(base, name)
 
 
+class NoLoggingWSGIRequestHandler(WSGIRequestHandler):
+    def log(self, format, *args):
+        pass
+
+
 def make_server_with_socket(socket: socket.socket):
     global server
     assert isinstance(socket.fileno(), int)
     # processes may break global latency setting
     server = make_server(
-        "127.0.0.1", port=0, app=app, fd=socket.fileno(), threaded=True
+        "127.0.0.1",
+        port=0,
+        app=app,
+        fd=socket.fileno(),
+        threaded=True,
+        request_handler=NoLoggingWSGIRequestHandler,
     )
     server.serve_forever()
 

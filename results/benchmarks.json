@@ -20,19 +20,28 @@
         "version": "b98b377526a6994dc19a480567d8e6ab23200b505b6c419dc05e1983c35c9f91"
     },
     "conda_install.TimeInstall.time_explicit_install": {
-        "code": "class TimeInstall:\n    def time_explicit_install(self):\n        socket = self.socket\n        prefix = os.path.join(self.td.name, \"explicit\")\n        port = socket.getsockname()[1]\n        # requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n        specs = [\n            re.sub(\"(.*)(/.*/.*)\", f\"http://127.0.0.1:{port}\\\\2\", spec)\n            for spec in SPECS\n        ]\n        print(specs)\n        os.environ[\"CONDA_PKGS_DIRS\"] = prefix\n        reset_context()\n        conda.misc.explicit(\n            specs,\n            prefix,\n            verbose=False,\n            force_extract=True,\n            index_args=None,\n            index=None,\n        )\n\n    def setup(self):\n        self.td = tempfile.TemporaryDirectory()\n        self.socket = run_on_random_port()",
+        "code": "class TimeInstall:\n    def time_explicit_install(self, threads):\n        socket = self.socket\n        prefix = os.path.join(self.td.name, \"explicit\")\n        port = socket.getsockname()[1]\n        # requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n        specs = [\n            re.sub(\"(.*)(/.*/.*)\", f\"http://127.0.0.1:{port}\\\\2\", spec)\n            for spec in SPECS\n        ]\n        print(specs)\n        os.environ[\"CONDA_PKGS_DIRS\"] = prefix\n        reset_context()\n        conda.core.package_cache_data.DOWNLOAD_THREADS = threads\n        conda.misc.explicit(\n            specs,\n            prefix,\n            verbose=False,\n            force_extract=True,\n            index_args=None,\n            index=None,\n        )\n\n    def setup(self, threads):\n        self.td = tempfile.TemporaryDirectory()\n        self.socket = run_on_random_port()",
         "min_run_count": 2,
         "name": "conda_install.TimeInstall.time_explicit_install",
         "number": 0,
-        "param_names": [],
-        "params": [],
+        "param_names": [
+            "threads"
+        ],
+        "params": [
+            [
+                "1",
+                "3",
+                "7",
+                "10"
+            ]
+        ],
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "33c6ff07574eddfa2bade0857d4b11a4ac367a87247bbfef01766b37a139cb08",
+        "version": "07f44b4a32f94dc6f615af01eab18fd96fe76edc364666cfb03f9c16b7089c9b",
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_aiohttp": {

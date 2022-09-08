@@ -4,6 +4,7 @@ Flask-based conda repository server for testing.
 Change contents to simulate an updating repository.
 """
 
+import contextlib
 import multiprocessing
 import socket
 import time
@@ -58,14 +59,21 @@ def run_on_random_port():
     """
     Run in a new process to minimize interference with test.
     """
+    return run_and_cleanup().__enter__()
+
+
+@contextlib.contextmanager
+def run_and_cleanup(cleanup=True):
     socket = prepare_socket("127.0.0.1", 0)
     process = multiprocessing.Process(
         target=make_server_with_socket, args=(socket,), daemon=True
     )
     process.start()
-    return socket
+    yield socket
+    process.kill()
 
 
 if __name__ == "__main__":
+
     print(run_on_random_port())
     time.sleep(60)

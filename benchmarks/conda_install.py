@@ -1,17 +1,24 @@
+import contextlib
 import json
 import os
 import os.path
 import pathlib
 import re
 import tempfile
+import time
+import logging
 
 import conda.core
+import conda.core.package_cache_data
+from conda.exports import download
 import conda.misc
-from conda.base.context import reset_context
+from conda.base.context import context, reset_context
 from conda.core.package_cache_data import ProgressiveFetchExtract
 from conda.testing.helpers import run_inprocess_conda_command
 
 from .test_server import run_and_cleanup, run_on_random_port
+
+log = logging.getLogger(__name__)
 
 lockfile = pathlib.Path(__file__).parent / "../conda-osx-64.lock"
 specs = pathlib.Path(__file__).parent / "../specs.json"  # parsed from lock file
@@ -24,22 +31,26 @@ class TimeInstall:
     params = [1, 3, 7, 10]
     param_names = ["threads"]
 
-    def setup(self, threads):
+    def setup(self, threads, server=True):
         self.td = tempfile.TemporaryDirectory()
-        self.socket = run_on_random_port()
+        if server:
+            self.socket = run_on_random_port()
 
     def teardown(self, threads):
         self.td.cleanup()
 
     # From remote URLs
-    # def time_download_lockfile(self):
-    #     os.environ["CONDA_PKGS_DIRS"] = self.td.name
-    #     run_inprocess_conda_command(
-    #         f"conda install --download-only --file {lockfile}",
-    #         disallow_stderr=False,
-    #     )
+    def time_download_lockfile(self):
+        os.environ["CONDA_BASE"] = self.td.name
+        os.environ["CONDA_PKGS_DIRS"] = self.td.name
+        print(f"Download to {self.td.name}")
+        reset_context()
+        run_inprocess_conda_command(
+            f"conda install --download-only --file {lockfile}",
+            disallow_stderr=False,
+        )
 
-    def time_explicit_install(self, threads):
+    def time_explicit_install(self, threads, download_only=False):
         socket = self.socket
         prefix = os.path.join(self.td.name, "explicit")
         port = socket.getsockname()[1]
@@ -48,10 +59,12 @@ class TimeInstall:
             re.sub("(.*)(/.*/.*)", f"http://127.0.0.1:{port}\\2", spec)
             for spec in SPECS
         ]
-        print(specs)
+        log.debug("%s", specs)
         os.environ["CONDA_PKGS_DIRS"] = prefix
         reset_context()
         conda.core.package_cache_data.DOWNLOAD_THREADS = threads
+        context.download_only = download_only
+        context.debug = 1
         conda.misc.explicit(
             specs,
             prefix,
@@ -62,7 +75,27 @@ class TimeInstall:
         )
 
 
+@contextlib.contextmanager
+def timeme(message=""):
+    t = time.monotonic()
+    yield
+    print(f"{message}Took {time.monotonic()-t:0.2f}s")
+
+
+def run():
+    for threads in (1, 3, 7):
+        ti = TimeInstall()
+        ti.setup(threads)
+        with timeme(f"{threads} "):
+            try:
+                ti.time_explicit_install(threads, download_only=False)
+            except Exception as e:
+                log.exception(e)
+                pass
+
+
 if __name__ == "__main__":
-    ti = TimeInstall()
-    ti.setup(10)
-    ti.time_explicit_install(10)
+    logging.basicConfig()
+    log.setLevel(logging.INFO)
+    conda.core.package_cache_data.log.setLevel(logging.DEBUG)
+    run()

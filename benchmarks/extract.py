@@ -1,5 +1,6 @@
-# Write the benchmarking functions here.
-# See "Writing benchmarks" in the asv docs for more information.
+"""
+Compare ways to extract conda packages.
+"""
 
 import pathlib
 import re

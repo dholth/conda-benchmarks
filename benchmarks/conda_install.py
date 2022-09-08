@@ -1,19 +1,21 @@
 import contextlib
 import json
+import logging
 import os
 import os.path
 import pathlib
 import re
 import tempfile
 import time
-import logging
 
+import conda
 import conda.core
 import conda.core.package_cache_data
-from conda.exports import download
 import conda.misc
+import requests
 from conda.base.context import context, reset_context
 from conda.core.package_cache_data import ProgressiveFetchExtract
+from conda.exports import download
 from conda.testing.helpers import run_inprocess_conda_command
 
 from .test_server import run_and_cleanup, run_on_random_port
@@ -28,33 +30,33 @@ SPECS = json.loads(specs.read_text())
 
 
 class TimeInstall:
-    params = [1, 3, 7, 10]
-    param_names = ["threads"]
+    params = [[1, 0.0], [7, 1.0]]
+    param_names = ["threads", "latency"]
 
-    def setup(self, threads, server=True):
+    def setup(self, threads, latency, server=True):
         self.td = tempfile.TemporaryDirectory()
         if server:
             self.socket = run_on_random_port()
 
-    def teardown(self, threads):
+    def teardown(self, threads, latency):
         self.td.cleanup()
 
     # From remote URLs
-    def time_download_lockfile(self):
-        os.environ["CONDA_BASE"] = self.td.name
-        os.environ["CONDA_PKGS_DIRS"] = self.td.name
-        print(f"Download to {self.td.name}")
-        reset_context()
-        run_inprocess_conda_command(
-            f"conda install --download-only --file {lockfile}",
-            disallow_stderr=False,
-        )
+    # def time_download_lockfile(self):
+    #     os.environ["CONDA_BASE"] = self.td.name
+    #     os.environ["CONDA_PKGS_DIRS"] = self.td.name
+    #     print(f"Download to {self.td.name}")
+    #     reset_context()
+    #     run_inprocess_conda_command(
+    #         f"conda install --download-only --file {lockfile}",
+    #         disallow_stderr=False,
+    #     )
 
-    def time_explicit_install(self, threads, download_only=False):
+    def time_explicit_install(self, threads, latency, download_only=True):
         socket = self.socket
-        prefix = os.path.join(self.td.name, "explicit")
+        prefix = os.path.join(self.td.name, f"ex-{threads}-{latency}")
         port = socket.getsockname()[1]
-        # requests.get(f"http://127.0.0.1:{self.port}/latency/{latency}")
+        requests.get(f"http://127.0.0.1:{port}/latency/{latency}")
         specs = [
             re.sub("(.*)(/.*/.*)", f"http://127.0.0.1:{port}\\2", spec)
             for spec in SPECS
@@ -62,17 +64,21 @@ class TimeInstall:
         log.debug("%s", specs)
         os.environ["CONDA_PKGS_DIRS"] = prefix
         reset_context()
+        print(f"threads={threads}")
         conda.core.package_cache_data.DOWNLOAD_THREADS = threads
         context.download_only = download_only
         context.debug = 1
-        conda.misc.explicit(
-            specs,
-            prefix,
-            verbose=False,
-            force_extract=True,
-            index_args=None,
-            index=None,
-        )
+        try:
+            conda.misc.explicit(
+                specs,
+                prefix,
+                verbose=False,
+                force_extract=True,
+                index_args=None,
+                index=None,
+            )
+        except conda.CondaExitZero:
+            log.info("cache prepared (not an error)")
 
 
 @contextlib.contextmanager
@@ -83,19 +89,24 @@ def timeme(message=""):
 
 
 def run():
-    for threads in (1, 3, 7):
-        ti = TimeInstall()
-        ti.setup(threads)
-        with timeme(f"{threads} "):
-            try:
-                ti.time_explicit_install(threads, download_only=False)
-            except Exception as e:
-                log.exception(e)
-                pass
+    for latency in (1,):
+        for threads in (3,):
+            ti = TimeInstall()
+            ti.setup(threads, latency)
+            with timeme(f"{threads} "):
+                try:
+                    ti.time_explicit_install(threads, latency, download_only=True)
+                except Exception as e:
+                    log.exception(e)
+                    pass
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig()
     log.setLevel(logging.INFO)
     conda.core.package_cache_data.log.setLevel(logging.DEBUG)
     run()
+
+
+if __name__ == "__main__":
+    main()

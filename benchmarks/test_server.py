@@ -75,7 +75,8 @@ def run_on_random_port():
 @contextlib.contextmanager
 def run_and_cleanup(cleanup=True):
     socket = prepare_socket("127.0.0.1", 0)
-    process = multiprocessing.Process(
+    context = multiprocessing.get_context("spawn")
+    process = context.Process(
         target=make_server_with_socket, args=(socket,), daemon=True
     )
     process.start()

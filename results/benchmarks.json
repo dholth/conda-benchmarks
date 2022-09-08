@@ -19,10 +19,10 @@
         "unit": "speedup",
         "version": "b98b377526a6994dc19a480567d8e6ab23200b505b6c419dc05e1983c35c9f91"
     },
-    "conda_install.TimeInstall.time_download_lockfile": {
-        "code": "class TimeInstall:\n    def time_download_lockfile(self):\n        os.environ[\"CONDA_PKGS_DIRS\"] = self.td.name\n        run_inprocess_conda_command(\n            f\"conda install --download-only --file {lockfile}\",\n            disallow_stderr=False,\n        )\n\n    def setup(self):\n        self.td = tempfile.TemporaryDirectory()",
+    "conda_install.TimeInstall.time_explicit_install": {
+        "code": "class TimeInstall:\n    def time_explicit_install(self):\n        socket = self.socket\n        prefix = os.path.join(self.td.name, \"explicit\")\n        port = socket.getsockname()[1]\n        # requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n        specs = [\n            re.sub(\"(.*)(/.*/.*)\", f\"http://127.0.0.1:{port}\\\\2\", spec)\n            for spec in SPECS\n        ]\n        print(specs)\n        os.environ[\"CONDA_PKGS_DIRS\"] = prefix\n        reset_context()\n        conda.misc.explicit(\n            specs,\n            prefix,\n            verbose=False,\n            force_extract=True,\n            index_args=None,\n            index=None,\n        )\n\n    def setup(self):\n        self.td = tempfile.TemporaryDirectory()\n        self.socket = run_on_random_port()",
         "min_run_count": 2,
-        "name": "conda_install.TimeInstall.time_download_lockfile",
+        "name": "conda_install.TimeInstall.time_explicit_install",
         "number": 0,
         "param_names": [],
         "params": [],
@@ -32,7 +32,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "47d1dd8fae1f3171e775efcb84217a8bd29e54b647d2fd75305076bfec476d5d",
+        "version": "33c6ff07574eddfa2bade0857d4b11a4ac367a87247bbfef01766b37a139cb08",
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_aiohttp": {

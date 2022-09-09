@@ -30,7 +30,7 @@ SPECS = json.loads(specs.read_text())
 
 
 class TimeInstall:
-    params = [[1, 7], [0.0, 1.0]]
+    params = [[1, 3, 7], [0.0, 0.25]]
     param_names = ["threads", "latency"]
 
     def setup(self, threads, latency, server=True):

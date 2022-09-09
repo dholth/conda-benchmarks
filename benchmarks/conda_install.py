@@ -18,7 +18,7 @@ from conda.core.package_cache_data import ProgressiveFetchExtract
 from conda.exports import download
 from conda.testing.helpers import run_inprocess_conda_command
 
-from .test_server import run_and_cleanup, run_on_random_port
+from benchmarks.test_server import run_and_cleanup, run_on_random_port
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ SPECS = json.loads(specs.read_text())
 
 
 class TimeInstall:
-    params = [[1, 0.0], [7, 1.0]]
+    params = [[1, 7], [0.0, 1.0]]
     param_names = ["threads", "latency"]
 
     def setup(self, threads, latency, server=True):
@@ -89,16 +89,12 @@ def timeme(message=""):
 
 
 def run():
-    for latency in (1,):
-        for threads in (3,):
+    for latency in (10.,):
+        for threads in (1, 3, 10):
             ti = TimeInstall()
             ti.setup(threads, latency)
             with timeme(f"{threads} "):
-                try:
-                    ti.time_explicit_install(threads, latency, download_only=True)
-                except Exception as e:
-                    log.exception(e)
-                    pass
+                ti.time_explicit_install(threads, latency, download_only=True)
 
 
 def main():

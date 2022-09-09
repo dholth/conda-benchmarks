@@ -5,13 +5,17 @@ import os
 import os.path
 import pathlib
 import re
+import subprocess
 import tempfile
 import time
+from concurrent.futures.thread import ThreadPoolExecutor
+from functools import partial
 
 import conda
 import conda.core
 import conda.core.package_cache_data
 import conda.misc
+import conda_package_streaming.extract
 import requests
 from conda.base.context import context, reset_context
 from conda.core.package_cache_data import ProgressiveFetchExtract
@@ -89,12 +93,68 @@ def timeme(message=""):
 
 
 def run():
-    for latency in (10.,):
+    for latency in (10.0,):
         for threads in (1, 3, 10):
             ti = TimeInstall()
             ti.setup(threads, latency)
             with timeme(f"{threads} "):
                 ti.time_explicit_install(threads, latency, download_only=True)
+
+
+RUST_CONDA = (
+    # from conda-package-streaming rust-extension branch
+    # winds up being similar in speed to our Python implementation
+    os.path.expanduser(
+        "~/prog/conda-package-streaming/rust-conda/target/release/rust-conda"
+    )
+)
+
+
+def conda_extract_rust(threads):
+    from urllib.parse import urlparse
+
+    from .test_server import base
+
+    with tempfile.TemporaryDirectory() as dest:
+        print(f"extract {len(SPECS)} conda's to {dest}")
+        with timeme("rust extract"), ThreadPoolExecutor(threads) as pool:
+            for spec in SPECS:
+                if spec == "@EXPLICIT":
+                    continue
+                conda = urlparse(spec).path.rsplit("/")[-1]
+                conda_path = base / conda
+                assert conda_path.exists(), conda_path
+                cmd = [RUST_CONDA, str(conda_path)]
+                pool.submit(
+                    partial(
+                        subprocess.check_call, cmd, cwd=dest, stdout=subprocess.DEVNULL
+                    )
+                )
+
+
+def conda_extract_streaming(threads):
+    from urllib.parse import urlparse
+
+    from .test_server import base
+
+    with tempfile.TemporaryDirectory() as dest:
+        print(f"extract {len(SPECS)} conda's to {dest}")
+        with timeme("python extract"), ThreadPoolExecutor(threads) as pool:
+            for spec in SPECS:
+                if spec == "@EXPLICIT":
+                    continue
+                conda = urlparse(spec).path.rsplit("/")[-1]
+                conda_path = base / conda
+                assert conda_path.exists(), conda_path
+                conda_dest = pathlib.Path(dest, pathlib.Path(conda).stem)
+                # could use with fileobj: to avoid re-opening
+                # may not support avoiding re-parse of zip?
+                pool.submit(
+                    partial(
+                        conda_package_streaming.extract.extract, conda_path, conda_dest
+                    )
+                )
+            # should automatically join
 
 
 def main():
@@ -105,4 +165,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    for threads in (1, 3, 7):
+        print(f"Threads: {threads}")
+        conda_extract_rust(threads)
+        conda_extract_streaming(threads)
+        print()

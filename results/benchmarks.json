@@ -120,5 +120,21 @@
         "unit": "speedup",
         "version": "b98b377526a6994dc19a480567d8e6ab23200b505b6c419dc05e1983c35c9f91"
     },
+    "run_versus_activate.time_conda_run": {
+        "code": "def time_conda_run():\n    \"\"\"\n    May need to be string form of benchmark to catch import times?\n    \"\"\"\n    from conda.testing.helpers import run_inprocess_conda_command\n\n    run_inprocess_conda_command(\n        \"conda run -n base python -V\",\n        disallow_stderr=False,\n    )",
+        "min_run_count": 2,
+        "name": "run_versus_activate.time_conda_run",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "ce014c648a566030aac63b393c16c9333f0b90cbf380a3b537e552e501941096",
+        "warmup_time": -1
+    },
     "version": 2
 }

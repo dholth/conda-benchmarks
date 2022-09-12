@@ -1,6 +1,6 @@
 {
     "conda_install.TimeInstall.time_explicit_install": {
-        "code": "class TimeInstall:\n    def time_explicit_install(self, threads, latency, download_only=True):\n        socket = self.socket\n        prefix = os.path.join(self.td.name, f\"ex-{threads}-{latency}\")\n        port = socket.getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{port}/latency/{latency}\")\n        specs = [\n            re.sub(\"(.*)(/.*/.*)\", f\"http://127.0.0.1:{port}\\\\2\", spec)\n            for spec in SPECS\n        ]\n        log.debug(\"%s\", specs)\n        os.environ[\"CONDA_PKGS_DIRS\"] = prefix\n        reset_context()\n        print(f\"threads={threads}\")\n        conda.core.package_cache_data.DOWNLOAD_THREADS = threads\n        context.download_only = download_only\n        context.debug = 1\n        try:\n            conda.misc.explicit(\n                specs,\n                prefix,\n                verbose=False,\n                force_extract=True,\n                index_args=None,\n                index=None,\n            )\n        except conda.CondaExitZero:\n            log.info(\"cache prepared (not an error)\")\n\n    def setup(self, threads, latency, server=True):\n        self.td = tempfile.TemporaryDirectory()\n        if server:\n            self.socket = run_on_random_port()",
+        "code": "class TimeInstall:\n    def time_explicit_install(self, threads, latency, download_only=True):\n        socket = self.socket\n        prefix = os.path.join(self.td.name, f\"ex-{threads}-{latency}\")\n        port = socket.getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{port}/latency/{latency}\")\n        specs = [\n            re.sub(\"(.*)(/.*/.*)\", f\"http://127.0.0.1:{port}\\\\2\", spec)\n            for spec in SPECS\n        ]\n        log.debug(\"%s\", specs)\n        os.environ[\"CONDA_PKGS_DIRS\"] = prefix\n        os.environ[\"CONDA_FETCH_THREADS\"] = str(threads)\n        reset_context()\n        print(f\"threads={threads}\")\n        if hasattr(context, \"fetch_threads\"):\n            assert context.fetch_threads == threads\n        conda.core.package_cache_data.DOWNLOAD_THREADS = threads\n        context.download_only = download_only\n        context.debug = 1\n        try:\n            conda.misc.explicit(\n                specs,\n                prefix,\n                verbose=False,\n                force_extract=True,\n                index_args=None,\n                index=None,\n            )\n        except conda.CondaExitZero:\n            log.info(\"cache prepared (not an error)\")\n\n    def setup(self, threads, latency, server=True):\n        self.td = tempfile.TemporaryDirectory()\n        if server:\n            self.socket = run_on_random_port()",
         "min_run_count": 2,
         "name": "conda_install.TimeInstall.time_explicit_install",
         "number": 0,
@@ -25,7 +25,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "84b3c5a771924041d8f2d7757afd495ae3fc82682fd2bb27cf76a3344e2fc68a",
+        "version": "4de805fe8eda4b1904cf90edf9b73e5941ba1b0913a6994161ebc05ca41245fb",
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_aiohttp": {

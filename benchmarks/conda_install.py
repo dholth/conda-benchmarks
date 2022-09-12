@@ -63,8 +63,11 @@ class TimeInstall:
         ]
         log.debug("%s", specs)
         os.environ["CONDA_PKGS_DIRS"] = prefix
+        os.environ["CONDA_FETCH_THREADS"] = str(threads)
         reset_context()
         print(f"threads={threads}")
+        if hasattr(context, "fetch_threads"):
+            assert context.fetch_threads == threads
         conda.core.package_cache_data.DOWNLOAD_THREADS = threads
         context.download_only = download_only
         context.debug = 1

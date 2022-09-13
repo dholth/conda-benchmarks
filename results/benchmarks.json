@@ -101,7 +101,7 @@
         "warmup_time": -1
     },
     "extract.TimeExtract.time_extract": {
-        "code": "class TimeExtract:\n    def time_extract(self, threads, format):\n        with ThreadPoolExecutor(threads) as executor:\n            for package in self.packages:\n                stem = package.name[:-len(format)]\n                dest_dir = pathlib.Path(self.td.name, stem)\n                executor.submit(conda_package_streaming.extract.extract, package, dest_dir)\n\n    def setup(self, threads, format):\n        self.td = TemporaryDirectory()\n    \n        # could use list from `conda-lock` in case more packages are in base\n        self.packages = list(base.glob(f\"*{format}\"))\n        if len(self.packages) < MINIMUM_PACKAGES:\n            raise NotImplementedError(f\"Not enough packages in {base}\")",
+        "code": "class TimeExtract:\n    def time_extract(self, threads, format):\n        with ThreadPoolExecutor(threads) as executor:\n            for package in self.packages:\n                stem = package.name[: -len(format)]\n                dest_dir = pathlib.Path(self.td.name, stem)\n                executor.submit(\n                    conda_package_streaming.extract.extract, package, dest_dir\n                )\n\n    def setup(self, threads, format):\n        self.td = TemporaryDirectory()\n    \n        # could use list from `conda-lock` in case more packages are in base\n        self.packages = list(base.glob(f\"*{format}\"))\n        if len(self.packages) < MINIMUM_PACKAGES:\n            raise NotImplementedError(f\"Not enough packages in {base}\")",
         "min_run_count": 2,
         "name": "extract.TimeExtract.time_extract",
         "number": 0,
@@ -127,7 +127,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "7cdf6c1296322f4f15669139faf32f8ce789d1ccf4af49796f65300b1f1426a0",
+        "version": "d7893362a19c447ac1e3349fcee2d4d666fb624354e1e315a3e686a17b85475c",
         "warmup_time": -1
     },
     "extract.TrackSuite.track_streaming_versus_handling": {

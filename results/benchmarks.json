@@ -29,7 +29,7 @@
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_aiohttp": {
-        "code": "class TimeDownloadPackages:\n    def time_download_aiohttp(self, latency=0.0):\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        asyncio.run(main(self.fixup_urls(), target_base))\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "code": "class TimeDownloadPackages:\n    def time_download_aiohttp(self, latency=0.0):\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        asyncio.run(main(self.fixup_urls(), target_base))\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n    \n        for package in add_bz2(cheap[\"package\"]):\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
         "min_run_count": 2,
         "name": "download_asyncio.TimeDownloadPackages.time_download_aiohttp",
         "number": 0,
@@ -45,15 +45,15 @@
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
-        "setup_cache_key": "download_asyncio:113",
+        "setup_cache_key": "download_asyncio:125",
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "2aa08e23f81f2abd97f19e2127536a33058b1ff6b36a5807b522d43740c9e090",
+        "version": "b99ceda6f17fdbe30a92c1060a4e8e990a3fe8f6ce6338e3e4f623ffb9ec53f3",
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_serial": {
-        "code": "class TimeDownloadPackages:\n    def time_download_serial(self, latency=0.0):\n        # does teardown/setup not run for each function in this class\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        for package in self.fixup_urls():\n            name = package[\"url\"].rsplit(\"/\", 1)[-1]\n            target = target_base / name\n            assert not target.exists()\n            conda.exports.download(package[\"url\"], target)\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "code": "class TimeDownloadPackages:\n    def time_download_serial(self, latency=0.0):\n        # does teardown/setup not run for each function in this class\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        for package in self.fixup_urls():\n            name = package[\"url\"].rsplit(\"/\", 1)[-1]\n            target = target_base / name\n            assert not target.exists()\n            conda.exports.download(package[\"url\"], target)\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n    \n        for package in add_bz2(cheap[\"package\"]):\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
         "min_run_count": 2,
         "name": "download_asyncio.TimeDownloadPackages.time_download_serial",
         "number": 0,
@@ -69,15 +69,15 @@
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
-        "setup_cache_key": "download_asyncio:113",
+        "setup_cache_key": "download_asyncio:125",
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "2fd5fa7279b3627fd12bfc57cbf078fdfe05ebb2397031d5a61ba69803c84084",
+        "version": "ef7aeccf1080aa6874fb63fccf61f9ee1e468cae1f45c98c2c76300fa153e690",
         "warmup_time": -1
     },
     "download_asyncio.TimeDownloadPackages.time_download_threads": {
-        "code": "class TimeDownloadPackages:\n    def time_download_threads(self, latency=0.0):\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        targets = []\n        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as tpe:\n            for package in self.fixup_urls():\n                name = package[\"url\"].rsplit(\"/\", 1)[-1]\n                target = target_base / name\n                assert not target.exists()\n                targets.append(target)\n                tpe.submit(conda.exports.download, package[\"url\"], target)\n    \n        assert all(target.exists() for target in targets)\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n        for package in cheap[\"package\"]:\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
+        "code": "class TimeDownloadPackages:\n    def time_download_threads(self, latency=0.0):\n        target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here\n        targets = []\n        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as tpe:\n            for package in self.fixup_urls():\n                name = package[\"url\"].rsplit(\"/\", 1)[-1]\n                target = target_base / name\n                assert not target.exists()\n                targets.append(target)\n                tpe.submit(conda.exports.download, package[\"url\"], target)\n    \n        assert all(target.exists() for target in targets)\n\n    def setup(self, latency=0.0):\n        self.tempdir = TemporaryDirectory(\"aiohttp\")\n        self.temppath = Path(self.tempdir.name)\n        log.info(\"Download to %s\", self.tempdir)\n        self._port = test_server.run_on_random_port().getsockname()[1]\n        requests.get(f\"http://127.0.0.1:{self.port}/latency/{latency}\")\n\n    def setup_cache(self):\n        \"\"\"\n        Called once per session.\n        self.value = x doesn't work here; benchmarks run in separate processes.\n        \"\"\"\n        test_server.base.mkdir(parents=True, exist_ok=True)\n    \n        for package in add_bz2(cheap[\"package\"]):\n            name = package[\"url\"].rpartition(\"/\")[-1]\n            if not (test_server.base / name).exists():\n                conda.exports.download(package[\"url\"], test_server.base / name)",
         "min_run_count": 2,
         "name": "download_asyncio.TimeDownloadPackages.time_download_threads",
         "number": 0,
@@ -93,32 +93,62 @@
         "repeat": 0,
         "rounds": 2,
         "sample_time": 0.01,
-        "setup_cache_key": "download_asyncio:113",
+        "setup_cache_key": "download_asyncio:125",
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "5fcbf68e7f77259df75c851521dde5a797b82b87d7ff9628e5f20fe996987d90",
+        "version": "f20bee13d4a76745a8873bd5a372d7226983034870d9b67e817f0b19af745fbf",
+        "warmup_time": -1
+    },
+    "extract.TimeExtract.time_extract": {
+        "code": "class TimeExtract:\n    def time_extract(self, threads, format):\n        with ThreadPoolExecutor(threads) as executor:\n            for package in self.packages:\n                stem = package.name[:-len(format)]\n                dest_dir = pathlib.Path(self.td.name, stem)\n                executor.submit(conda_package_streaming.extract.extract, package, dest_dir)\n\n    def setup(self, threads, format):\n        self.td = TemporaryDirectory()\n    \n        # could use list from `conda-lock` in case more packages are in base\n        self.packages = list(base.glob(f\"*{format}\"))\n        if len(self.packages) < MINIMUM_PACKAGES:\n            raise NotImplementedError(f\"Not enough packages in {base}\")",
+        "min_run_count": 2,
+        "name": "extract.TimeExtract.time_extract",
+        "number": 0,
+        "param_names": [
+            "threads",
+            "format"
+        ],
+        "params": [
+            [
+                "1",
+                "2",
+                "3",
+                "7"
+            ],
+            [
+                "'.conda'",
+                "'.tar.bz2'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "7cdf6c1296322f4f15669139faf32f8ce789d1ccf4af49796f65300b1f1426a0",
         "warmup_time": -1
     },
     "extract.TrackSuite.track_streaming_versus_handling": {
-        "code": "class TrackSuite:\n    def track_streaming_versus_handling(self):\n        \"\"\"\n        Compare conda-package-streaming time versus conda-package-handling (should be a number > 1)\n        \"\"\"\n        attempted = len(self.condas)\n        with TemporaryDirectory(\n            \"conda-package-streaming\"\n        ) as streaming, TemporaryDirectory(\"conda-package-handling\") as handling:\n    \n            # give faster streaming the cache disadvantage\n            begin = time.monotonic()\n            # revise self.condas down to the number extracted in no more than\u0153\n            # MAXIMUM_SECONDS\n            self.condas = extract_streaming(streaming, self.condas)\n            end = time.monotonic()\n            cps_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'streaming' extracted {actual} out of {attempted} .conda's\")\n    \n            begin = time.monotonic()\n            self.condas = extract_handling(\n                handling, self.condas, time_limit=cps_time * 4\n            )\n            end = time.monotonic()\n            handling_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'handling' extracted {actual} out of {attempted} .conda's\")\n    \n            return handling_time / cps_time\n\n    def setup(self):\n        self.condas = list(\n            pathlib.Path(\"~/miniconda3/pkgs\").expanduser().glob(\"*.conda\")\n        )\n        if len(self.condas) < MINIMUM_PACKAGES:\n            raise NotImplementedError(\"Not enough .conda packages in ~/miniconda3/pkgs\")\n    \n        self.tarbz2 = list(\n            pathlib.Path(\"~/miniconda3/pkgs\").expanduser().glob(\"*.tar.bz2\")\n        )",
+        "code": "class TrackSuite:\n    def track_streaming_versus_handling(self):\n        \"\"\"\n        Compare conda-package-streaming time versus conda-package-handling (should be a number > 1)\n        \"\"\"\n        attempted = len(self.condas)\n        with TemporaryDirectory(\n            \"conda-package-streaming\"\n        ) as streaming, TemporaryDirectory(\"conda-package-handling\") as handling:\n    \n            # give faster streaming the cache disadvantage\n            begin = time.monotonic()\n            # revise self.condas down to the number extracted in no more than\u0153\n            # MAXIMUM_SECONDS\n            self.condas = extract_streaming(streaming, self.condas)\n            end = time.monotonic()\n            cps_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'streaming' extracted {actual} out of {attempted} .conda's\")\n    \n            begin = time.monotonic()\n            self.condas = extract_handling(\n                handling, self.condas, time_limit=cps_time * 4\n            )\n            end = time.monotonic()\n            handling_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'handling' extracted {actual} out of {attempted} .conda's\")\n    \n            return handling_time / cps_time\n\n    def setup(self):\n        self.condas = list(base.glob(\"*.conda\"))\n        if len(self.condas) < MINIMUM_PACKAGES:\n            raise NotImplementedError(\"Not enough .conda packages in ~/miniconda3/pkgs\")\n    \n        self.tarbz2 = list(base.glob(\"*.tar.bz2\"))",
         "name": "extract.TrackSuite.track_streaming_versus_handling",
         "param_names": [],
         "params": [],
         "timeout": 60.0,
         "type": "track",
         "unit": "speedup",
-        "version": "ebe826af0a862e09a49c33305dbca6d98f8f00f8836cc7eb1c82360516680d02"
+        "version": "d384feaa4082383c1f3872b820824ebbdbecd2d47ed818f8ff9623741d3f9199"
     },
     "extract.TrackSuite.track_streaming_versus_handling_tarbz2": {
-        "code": "class TrackSuite:\n    def track_streaming_versus_handling_tarbz2(self):\n        \"\"\"\n        Compare conda-package-streaming time versus conda-package-handling (should be a number > 1)\n        \"\"\"\n        attempted = len(self.condas)\n        with TemporaryDirectory(\n            \"conda-package-streaming-bz2\"\n        ) as streaming, TemporaryDirectory(\"conda-package-handling-bz2\") as handling:\n    \n            # give faster streaming the cache disadvantage\n            begin = time.monotonic()\n            # revise self.condas down to the number extracted in no more than\u0153\n            # MAXIMUM_SECONDS\n            self.tarbz2 = extract_streaming(streaming, self.tarbz2)\n            end = time.monotonic()\n            cps_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'streaming' extracted {actual} out of {attempted} .tar.bz2's\")\n    \n            begin = time.monotonic()\n            self.tarbz2 = extract_handling(\n                handling, self.tarbz2, time_limit=cps_time * 4\n            )\n            end = time.monotonic()\n            handling_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'handling' extracted {actual} out of {attempted} .tar.bz2's\")\n    \n            return handling_time / cps_time\n\n    def setup(self):\n        self.condas = list(\n            pathlib.Path(\"~/miniconda3/pkgs\").expanduser().glob(\"*.conda\")\n        )\n        if len(self.condas) < MINIMUM_PACKAGES:\n            raise NotImplementedError(\"Not enough .conda packages in ~/miniconda3/pkgs\")\n    \n        self.tarbz2 = list(\n            pathlib.Path(\"~/miniconda3/pkgs\").expanduser().glob(\"*.tar.bz2\")\n        )",
+        "code": "class TrackSuite:\n    def track_streaming_versus_handling_tarbz2(self):\n        \"\"\"\n        Compare conda-package-streaming time versus conda-package-handling (should be a number > 1)\n        \"\"\"\n        attempted = len(self.condas)\n        with TemporaryDirectory(\n            \"conda-package-streaming-bz2\"\n        ) as streaming, TemporaryDirectory(\"conda-package-handling-bz2\") as handling:\n    \n            # give faster streaming the cache disadvantage\n            begin = time.monotonic()\n            # revise self.condas down to the number extracted in no more than\u0153\n            # MAXIMUM_SECONDS\n            self.tarbz2 = extract_streaming(streaming, self.tarbz2)\n            end = time.monotonic()\n            cps_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'streaming' extracted {actual} out of {attempted} .tar.bz2's\")\n    \n            begin = time.monotonic()\n            self.tarbz2 = extract_handling(\n                handling, self.tarbz2, time_limit=cps_time * 4\n            )\n            end = time.monotonic()\n            handling_time = end - begin\n    \n            actual = len(self.condas)\n            print(f\"'handling' extracted {actual} out of {attempted} .tar.bz2's\")\n    \n            return handling_time / cps_time\n\n    def setup(self):\n        self.condas = list(base.glob(\"*.conda\"))\n        if len(self.condas) < MINIMUM_PACKAGES:\n            raise NotImplementedError(\"Not enough .conda packages in ~/miniconda3/pkgs\")\n    \n        self.tarbz2 = list(base.glob(\"*.tar.bz2\"))",
         "name": "extract.TrackSuite.track_streaming_versus_handling_tarbz2",
         "param_names": [],
         "params": [],
         "timeout": 60.0,
         "type": "track",
         "unit": "speedup",
-        "version": "b98b377526a6994dc19a480567d8e6ab23200b505b6c419dc05e1983c35c9f91"
+        "version": "cfb4bf5f3f7e90f04ebbf6294ea5132bc26bf5fbe56d6f3f56141cd92ec64442"
     },
     "run_versus_activate.time_conda_run": {
         "code": "def time_conda_run():\n    \"\"\"\n    May need to be string form of benchmark to catch import times?\n    \"\"\"\n    from conda.testing.helpers import run_inprocess_conda_command\n\n    run_inprocess_conda_command(\n        \"conda run -n base python -V\",\n        disallow_stderr=False,\n    )",

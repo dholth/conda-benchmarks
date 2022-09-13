@@ -92,6 +92,18 @@ async def download_url(session: aiohttp.ClientSession, sha256: str, fp: Path, ur
     # await loop.run_in_executor(p, extract, sha256, str(fp), target_dir)
 
 
+def add_bz2(packages):
+    """
+    Augment conda-lock["packages"] with ".tar.bz2" versions of each ".conda"
+
+    To test threading benefits of extracting slower .bz2 format.
+    """
+    for package in packages:
+        yield package
+        bz2_url = package["url"].replace(".conda", ".tar.bz2")
+        yield {**package, "url": bz2_url}
+
+
 class TimeDownloadPackages:
     params = [0.0, 0.01]
     param_names = ["latency"]
@@ -116,7 +128,8 @@ class TimeDownloadPackages:
         self.value = x doesn't work here; benchmarks run in separate processes.
         """
         test_server.base.mkdir(parents=True, exist_ok=True)
-        for package in cheap["package"]:
+
+        for package in add_bz2(cheap["package"]):
             name = package["url"].rpartition("/")[-1]
             if not (test_server.base / name).exists():
                 conda.exports.download(package["url"], test_server.base / name)

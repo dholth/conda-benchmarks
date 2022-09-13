@@ -31,7 +31,7 @@ SPECS = json.loads(specs.read_text())
 
 class TimeInstall:
     params = [[1, 3, 7], [0.0, 0.25]]
-    param_names = ["threads", "latency"]
+    param_names = ["threads", "latency", "format"]
 
     def setup(self, threads, latency, server=True):
         self.td = tempfile.TemporaryDirectory()
@@ -92,7 +92,7 @@ def timeme(message=""):
 
 
 def run():
-    for latency in (10.,):
+    for latency in (10.0,):
         for threads in (1, 3, 10):
             ti = TimeInstall()
             ti.setup(threads, latency)

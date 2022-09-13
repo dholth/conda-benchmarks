@@ -5,11 +5,16 @@ Compare ways to extract conda packages.
 import pathlib
 import re
 import time
+from concurrent.futures.thread import ThreadPoolExecutor
 from tempfile import TemporaryDirectory
+from threading import Thread
 from typing import List
 
+import conda_package_streaming.extract
 from conda_package_handling.api import extract
 from conda_package_streaming import package_streaming
+
+from .test_server import base
 
 MINIMUM_PACKAGES = 10
 MAXIMUM_SECONDS = 8.0
@@ -21,15 +26,11 @@ class TrackSuite:
     unit = "speedup"
 
     def setup(self):
-        self.condas = list(
-            pathlib.Path("~/miniconda3/pkgs").expanduser().glob("*.conda")
-        )
+        self.condas = list(base.glob("*.conda"))
         if len(self.condas) < MINIMUM_PACKAGES:
             raise NotImplementedError("Not enough .conda packages in ~/miniconda3/pkgs")
 
-        self.tarbz2 = list(
-            pathlib.Path("~/miniconda3/pkgs").expanduser().glob("*.tar.bz2")
-        )
+        self.tarbz2 = list(base.glob("*.tar.bz2"))
 
     def track_streaming_versus_handling(self):
         """
@@ -95,6 +96,35 @@ class TrackSuite:
             print(f"'handling' extracted {actual} out of {attempted} .tar.bz2's")
 
             return handling_time / cps_time
+
+
+class TimeExtract:
+    """
+    Does threading speed up conda extraction?
+    """
+
+    params = [[1, 2, 3, 7], [".conda", ".tar.bz2"]]
+    param_names = ["threads", "format"]
+
+    def setup(self, threads, format):
+        self.td = TemporaryDirectory()
+
+        # could use list from `conda-lock` in case more packages are in base
+        self.packages = list(base.glob(f"*{format}"))
+        if len(self.packages) < MINIMUM_PACKAGES:
+            raise NotImplementedError(f"Not enough packages in {base}")
+
+    def time_extract(self, threads, format):
+        with ThreadPoolExecutor(threads) as executor:
+            for package in self.packages:
+                stem = package.name[: -len(format)]
+                dest_dir = pathlib.Path(self.td.name, stem)
+                executor.submit(
+                    conda_package_streaming.extract.extract, package, dest_dir
+                )
+
+    def teardown(self, threads, format):
+        self.td.cleanup()
 
 
 def conda_stem(conda: pathlib.Path):

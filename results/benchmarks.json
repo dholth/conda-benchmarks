@@ -166,5 +166,21 @@
         "version": "ce014c648a566030aac63b393c16c9333f0b90cbf380a3b537e552e501941096",
         "warmup_time": -1
     },
+    "subdir_data.TimeSubdirData.time_subdir_data": {
+        "code": "class TimeSubdirData:\n    def time_subdir_data(self):\n        channel = Channel(f\"file://{base}\", platform=\"osx-64\")\n        SubdirData.clear_cached_local_channel_data()\n    \n        sd_a = SubdirData(channel)\n        assert sd_a.query_all(\"zlib =1.2.11\")\n\n    def setup(self):\n        if not REPODATA_FILENAME.exists():\n            REPODATA_FILENAME.parent.mkdir(exist_ok=True)\n            # fake out\n            (base / \"noarch\").mkdir(exist_ok=True)\n            (base /  \"noarch\" / \"repodata.json\").write_text(\"{}\")\n            (base /  \"noarch\" / \"repodata.json.bz2\").write_text(\"\")\n            conda.exports.download(\n                \"https://repo.anaconda.com/pkgs/main/osx-64/repodata.json\",\n                REPODATA_FILENAME,\n            )",
+        "min_run_count": 2,
+        "name": "subdir_data.TimeSubdirData.time_subdir_data",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "ec902decf18559c589015636f3cc89fe426694634df07417eca435e009f529bb",
+        "warmup_time": -1
+    },
     "version": 2
 }

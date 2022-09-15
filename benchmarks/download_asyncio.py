@@ -105,17 +105,17 @@ def add_bz2(packages):
 
 
 class TimeDownloadPackages:
-    params = [0.0, 0.01]
-    param_names = ["latency"]
+    params = [[0.0, 0.01], ["serial", "threads", "aiohttp"]]
+    param_names = ["latency", "strategy"]
 
-    def setup(self, latency=0.0):
+    def setup(self, latency=0.0, strategy=None):
         self.tempdir = TemporaryDirectory("aiohttp")
         self.temppath = Path(self.tempdir.name)
         log.info("Download to %s", self.tempdir)
         self._port = test_server.run_on_random_port().getsockname()[1]
         requests.get(f"http://127.0.0.1:{self.port}/latency/{latency}")
 
-    def teardown(self, latency=0.0):
+    def teardown(self, latency=0.0, strategy=None):
         self.tempdir.cleanup()
 
     @property
@@ -151,11 +151,11 @@ class TimeDownloadPackages:
             )
         return packages
 
-    def time_download_aiohttp(self, latency=0.0):
+    def download_aiohttp(self, latency=0.0):
         target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here
         asyncio.run(main(self.fixup_urls(), target_base))
 
-    def time_download_serial(self, latency=0.0):
+    def download_serial(self, latency=0.0):
         # does teardown/setup not run for each function in this class
         target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here
         for package in self.fixup_urls():
@@ -164,7 +164,7 @@ class TimeDownloadPackages:
             assert not target.exists()
             conda.exports.download(package["url"], target)
 
-    def time_download_threads(self, latency=0.0):
+    def download_threads(self, latency=0.0):
         target_base = Path(mkdtemp(dir=self.temppath))  # no cleanup here
         targets = []
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as tpe:
@@ -176,6 +176,13 @@ class TimeDownloadPackages:
                 tpe.submit(conda.exports.download, package["url"], target)
 
         assert all(target.exists() for target in targets)
+
+    def time_download_strategy(self, latency, strategy):
+        return {
+            "aiohttp": self.download_aiohttp,
+            "threads": self.download_threads,
+            "serial": self.download_serial,
+        }[strategy](latency)
 
 
 if __name__ == "__main__":

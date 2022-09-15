@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../conda"
+		},
+		{
+			"path": "../conda-libmamba-solver"
 		}
 	],
 	"settings": {}

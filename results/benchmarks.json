@@ -11,7 +11,9 @@
         "params": [
             [
                 "1",
+                "2",
                 "3",
+                "5",
                 "7"
             ],
             [
@@ -114,6 +116,7 @@
                 "1",
                 "2",
                 "3",
+                "5",
                 "7"
             ],
             [
@@ -167,7 +170,7 @@
         "warmup_time": -1
     },
     "subdir_data.TimeSubdirData.time_subdir_data": {
-        "code": "class TimeSubdirData:\n    def time_subdir_data(self):\n        channel = Channel(f\"file://{base}\", platform=\"osx-64\")\n        SubdirData.clear_cached_local_channel_data()\n    \n        sd_a = SubdirData(channel)\n        assert sd_a.query_all(\"zlib =1.2.11\")\n\n    def setup(self):\n        if not REPODATA_FILENAME.exists():\n            REPODATA_FILENAME.parent.mkdir(exist_ok=True)\n            # fake out\n            (base / \"noarch\").mkdir(exist_ok=True)\n            (base /  \"noarch\" / \"repodata.json\").write_text(\"{}\")\n            (base /  \"noarch\" / \"repodata.json.bz2\").write_text(\"\")\n            conda.exports.download(\n                \"https://repo.anaconda.com/pkgs/main/osx-64/repodata.json\",\n                REPODATA_FILENAME,\n            )",
+        "code": "class TimeSubdirData:\n    def time_subdir_data(self):\n        channel = Channel(f\"file://{base}\", platform=\"osx-64\")\n        SubdirData.clear_cached_local_channel_data()\n    \n        sd_a = SubdirData(channel)\n        assert sd_a.query_all(\"zlib =1.2.11\")\n\n    def setup(self):\n        if not REPODATA_FILENAME.exists():\n            REPODATA_FILENAME.parent.mkdir(exist_ok=True)\n            # fake out\n            (base / \"noarch\").mkdir(exist_ok=True)\n            (base /  \"noarch\" / \"repodata.json\").write_text(\"{}\")\n            (base /  \"noarch\" / \"repodata.json.bz2\").write_text(\"\")\n            # do we have a frozen large-ish repodata.json or can we fake one?\n            conda.exports.download(\n                \"https://repo.anaconda.com/pkgs/main/osx-64/repodata.json\",\n                REPODATA_FILENAME,\n            )",
         "min_run_count": 2,
         "name": "subdir_data.TimeSubdirData.time_subdir_data",
         "number": 0,
@@ -179,7 +182,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "ec902decf18559c589015636f3cc89fe426694634df07417eca435e009f529bb",
+        "version": "7462880ad54fe8b6899c03da2873ac3eb54f4d1c412eae2531f949167f865e47",
         "warmup_time": -1
     },
     "version": 2

@@ -103,7 +103,7 @@ class TimeExtract:
     Does threading speed up conda extraction?
     """
 
-    params = [[1, 2, 3, 7], [".conda", ".tar.bz2"]]
+    params = [[1, 2, 3, 5, 7], [".conda", ".tar.bz2"]]
     param_names = ["threads", "format"]
 
     def setup(self, threads, format):

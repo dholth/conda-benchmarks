@@ -61,13 +61,14 @@
         "warmup_time": -1
     },
     "extract.TimeExtract.time_extract": {
-        "code": "class TimeExtract:\n    def time_extract(self, threads, format):\n        with ThreadPoolExecutor(threads) as executor:\n            for package in self.packages:\n                stem = package.name[: -len(format)]\n                dest_dir = pathlib.Path(self.td.name, stem)\n                executor.submit(\n                    conda_package_streaming.extract.extract, package, dest_dir\n                )\n\n    def setup(self, threads, format):\n        self.td = TemporaryDirectory()\n    \n        # could use list from `conda-lock` in case more packages are in base\n        self.packages = list(base.glob(f\"*{format}\"))\n        if len(self.packages) < MINIMUM_PACKAGES:\n            raise NotImplementedError(f\"Not enough packages in {base}\")",
+        "code": "class TimeExtract:\n    def time_extract(self, threads, format, lang):\n        if lang == \"rust\" and unpack_conda is None:\n            raise NotImplementedError()\n        if lang == \"rust\" and format == \".tar.bz2\":\n            raise NotImplementedError()\n        extract_fn = {\n            \"rust\": u2,\n            \"py\": conda_package_streaming.extract.extract,\n        }[lang]\n    \n        with ThreadPoolExecutor(threads) as executor:\n            for package in self.packages:\n                stem = package.name[: -len(format)]\n                dest_dir = pathlib.Path(self.td.name, stem)\n                print(package, str(dest_dir))\n                executor.submit(extract_fn, package, dest_dir)\n\n    def setup(self, threads, format, lang):\n        if lang == \"rust\" and format == \".tar.bz2\":\n            raise NotImplementedError()\n        self.td = TemporaryDirectory()\n    \n        # could use list from `conda-lock` in case more packages are in base\n        self.packages = list(base.glob(f\"*{format}\"))\n        if len(self.packages) < MINIMUM_PACKAGES:\n            raise NotImplementedError(f\"Not enough packages in {base}\")",
         "min_run_count": 2,
         "name": "extract.TimeExtract.time_extract",
         "number": 0,
         "param_names": [
             "threads",
-            "format"
+            "format",
+            "lang"
         ],
         "params": [
             [
@@ -80,6 +81,10 @@
             [
                 "'.conda'",
                 "'.tar.bz2'"
+            ],
+            [
+                "'py'",
+                "'rust'"
             ]
         ],
         "repeat": 0,
@@ -88,7 +93,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "d7893362a19c447ac1e3349fcee2d4d666fb624354e1e315a3e686a17b85475c",
+        "version": "0eb046ec5865369b3e52246499edd774a6b94937dc8a306240dd80eedb3a9e94",
         "warmup_time": -1
     },
     "extract.TrackSuite.track_streaming_versus_handling": {
@@ -125,6 +130,38 @@
         "type": "time",
         "unit": "seconds",
         "version": "ce014c648a566030aac63b393c16c9333f0b90cbf380a3b537e552e501941096",
+        "warmup_time": -1
+    },
+    "subdir_data.TimeSubdirData.time_load_json": {
+        "code": "class TimeSubdirData:\n    def time_load_json(self):\n        os.environ[\"CONDA_PKGS_DIRS\"] = str(CONDA_PKGS_DIR)\n        os.environ[\"CONDA_DEFAULT_THREADS\"] = \"1\"\n        SubdirData.clear_cached_local_channel_data()\n        reset_context()\n        context.offline = True\n        channel = Channel(CHANNEL_URL)\n        subdir = SubdirDataNoPickle(channel)\n        subdir._read_local_repdata(MOD_STAMP[\"_etag\"], MOD_STAMP[\"_mod\"])\n\n    def setup(self):\n        if not REPODATA_FILENAME.exists():\n            REPODATA_FILENAME.parent.mkdir(exist_ok=True)\n            # fake out\n            (base / \"noarch\").mkdir(exist_ok=True)\n            (base / \"noarch\" / \"repodata.json\").write_text(\"{}\")\n            (base / \"noarch\" / \"repodata.json.bz2\").write_text(\"\")\n            # do we have a frozen large-ish repodata.json or can we fake one?\n            conda.exports.download(\n                \"https://repo.anaconda.com/pkgs/main/osx-64/repodata.json\",\n                REPODATA_FILENAME,\n            )",
+        "min_run_count": 2,
+        "name": "subdir_data.TimeSubdirData.time_load_json",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "35f66376e8016a26a66a7984f7d6f7028ad2359ab1f18287fb448fe4156087a2",
+        "warmup_time": -1
+    },
+    "subdir_data.TimeSubdirData.time_load_pickle": {
+        "code": "class TimeSubdirData:\n    def time_load_pickle(self):\n        os.environ[\"CONDA_PKGS_DIRS\"] = str(CONDA_PKGS_DIR)\n        os.environ[\"CONDA_DEFAULT_THREADS\"] = \"1\"\n        SubdirData.clear_cached_local_channel_data()\n        reset_context()\n        context.offline = True\n        channel = Channel(CHANNEL_URL)\n        sd = SubdirData(channel)\n        # sd._read_local_repdata(MOD_STAMP[\"_etag\"], MOD_STAMP[\"_mod\"])\n        sd._read_pickled(MOD_STAMP[\"_etag\"], MOD_STAMP[\"_mod\"])\n\n    def setup(self):\n        if not REPODATA_FILENAME.exists():\n            REPODATA_FILENAME.parent.mkdir(exist_ok=True)\n            # fake out\n            (base / \"noarch\").mkdir(exist_ok=True)\n            (base / \"noarch\" / \"repodata.json\").write_text(\"{}\")\n            (base / \"noarch\" / \"repodata.json.bz2\").write_text(\"\")\n            # do we have a frozen large-ish repodata.json or can we fake one?\n            conda.exports.download(\n                \"https://repo.anaconda.com/pkgs/main/osx-64/repodata.json\",\n                REPODATA_FILENAME,\n            )",
+        "min_run_count": 2,
+        "name": "subdir_data.TimeSubdirData.time_load_pickle",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 60.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "3addf0466d9c4e595a14d4765e24d30a3597031874c12e372de5477d2310038d",
         "warmup_time": -1
     },
     "subdir_data.TimeSubdirData.time_subdir_data": {

@@ -52,7 +52,7 @@
     //"install_timeout": 600,
 
     // the base URL to show a commit for the project.
-    // "show_commit_url": "http://github.com/owner/project/commit/",
+    "show_commit_url": "https://github.com/conda/conda/commit/",
 
     // The Pythons you'd like to test against.  If not provided, defaults
     // to the current version of Python used to run `asv`.
@@ -60,7 +60,7 @@
 
     // The list of conda channel names to be searched for benchmark
     // dependency packages in the specified order
-    "conda_channels": ["defaults"],
+    "conda_channels": ["conda", "defaults"],
 
     // A conda environment file that is used for environment creation.
     "conda_environment_file": "environment.yml",
@@ -84,16 +84,12 @@
     // during the benchmark phase, but will not trigger creation of
     // new environments.  A value of ``null`` means that the variable
     // will not be set for the current combination.
-    //
-    // "matrix": {
-    //     "req": {
-    //         "numpy": ["1.6", "1.7"],
-    //         "six": ["", null],  // test with and without six installed
-    //         "pip+emcee": [""]   // emcee is only available for install with pip.
-    //     },
-    //     "env": {"ENV_VAR_1": ["val1", "val2"]},
-    //     "env_nobuild": {"ENV_VAR_2": ["val3", null]},
-    // },
+
+    "matrix": {
+        "req": {
+            "conda-package-handling": ["1.9.0", "2.0.0a1"],
+        }
+    },
 
     // Combinations of libraries/python versions can be excluded/included
     // from the set to test. Each entry is a dictionary containing additional

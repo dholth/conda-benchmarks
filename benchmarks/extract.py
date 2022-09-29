@@ -5,6 +5,7 @@ Compare ways to extract conda packages.
 import pathlib
 import re
 import time
+from ast import Import, Not
 from concurrent.futures.thread import ThreadPoolExecutor
 from tempfile import TemporaryDirectory
 from threading import Thread
@@ -13,6 +14,11 @@ from typing import List
 import conda_package_streaming.extract
 from conda_package_handling.api import extract
 from conda_package_streaming import package_streaming
+
+try:
+    from rust_conda import unpack_conda
+except ImportError:
+    unpack_conda = None
 
 from .test_server import base
 
@@ -98,15 +104,22 @@ class TrackSuite:
             return handling_time / cps_time
 
 
+def u2(package, dest_dir):
+    unpack_conda(str(package), str(dest_dir))
+    assert pathlib.Path(dest_dir, "info").exists()
+
+
 class TimeExtract:
     """
     Does threading speed up conda extraction?
     """
 
-    params = [[1, 2, 3, 5, 7], [".conda", ".tar.bz2"]]
-    param_names = ["threads", "format"]
+    params = [[1, 2, 3, 5, 7], [".conda", ".tar.bz2"], ["py", "rust"]]
+    param_names = ["threads", "format", "lang"]
 
-    def setup(self, threads, format):
+    def setup(self, threads, format, lang):
+        if lang == "rust" and format == ".tar.bz2":
+            raise NotImplementedError()
         self.td = TemporaryDirectory()
 
         # could use list from `conda-lock` in case more packages are in base
@@ -114,17 +127,26 @@ class TimeExtract:
         if len(self.packages) < MINIMUM_PACKAGES:
             raise NotImplementedError(f"Not enough packages in {base}")
 
-    def time_extract(self, threads, format):
+    def time_extract(self, threads, format, lang):
+        if lang == "rust" and unpack_conda is None:
+            raise NotImplementedError()
+        if lang == "rust" and format == ".tar.bz2":
+            raise NotImplementedError()
+        extract_fn = {
+            "rust": u2,
+            "py": conda_package_streaming.extract.extract,
+        }[lang]
+
         with ThreadPoolExecutor(threads) as executor:
             for package in self.packages:
                 stem = package.name[: -len(format)]
                 dest_dir = pathlib.Path(self.td.name, stem)
-                executor.submit(
-                    conda_package_streaming.extract.extract, package, dest_dir
-                )
+                print(package, str(dest_dir))
+                executor.submit(extract_fn, package, dest_dir)
 
-    def teardown(self, threads, format):
-        self.td.cleanup()
+    def teardown(self, threads, format, lang):
+        if hasattr(self, "td"):
+            self.td.cleanup()  # ???
 
 
 def conda_stem(conda: pathlib.Path):

@@ -29,10 +29,8 @@
         "python -m pip install -e {conf_dir}"
     ],
 
-    // List of branches to benchmark. If not provided, defaults to "master"
-    // (for git) or "default" (for mercurial).
-    "branches": ["main", "parallel-download"], // for git
-    // "branches": ["default"],    // for mercurial
+    // List of branches to benchmark.
+    "branches": ["main"],
 
     // The DVCS being used.  If not set, it will be automatically
     // determined from "repo" by looking at the protocol in the URL

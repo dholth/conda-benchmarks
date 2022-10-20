@@ -30,7 +30,7 @@
     ],
 
     // List of branches to benchmark.
-    "branches": ["main"],
+    "branches": ["main", "features/repodata-gateway"],
 
     // The DVCS being used.  If not set, it will be automatically
     // determined from "repo" by looking at the protocol in the URL
@@ -85,7 +85,7 @@
 
     "matrix": {
         "req": {
-            "conda-package-handling": ["1.9.0", "2.0.0a1"],
+            "conda-package-handling": ["1.9.0", "2.0.0a2"],
         }
     },
 

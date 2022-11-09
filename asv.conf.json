@@ -30,7 +30,7 @@
     ],
 
     // List of branches to benchmark.
-    "branches": ["main", "features/repodata-gateway"],
+    "branches": ["main"], // , "features/repodata-gateway"],
 
     // The DVCS being used.  If not set, it will be automatically
     // determined from "repo" by looking at the protocol in the URL

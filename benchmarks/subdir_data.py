@@ -81,6 +81,28 @@ class TimeSubdirData:
         subdir = SubdirDataNoPickle(channel)
         subdir._read_local_repdata(MOD_STAMP["_etag"], MOD_STAMP["_mod"])
 
+    def time_load_json_query_one(self):
+        os.environ["CONDA_PKGS_DIRS"] = str(CONDA_PKGS_DIR)
+        os.environ["CONDA_DEFAULT_THREADS"] = "1"
+        SubdirData.clear_cached_local_channel_data()
+        reset_context()
+        context.offline = True
+        channel = Channel(CHANNEL_URL)
+        subdir = SubdirDataNoPickle(channel)
+        subdir._read_local_repdata(MOD_STAMP["_etag"], MOD_STAMP["_mod"])
+        subdir.query("python")
+
+    def time_load_json_query_all(self):
+        os.environ["CONDA_PKGS_DIRS"] = str(CONDA_PKGS_DIR)
+        os.environ["CONDA_DEFAULT_THREADS"] = "1"
+        SubdirData.clear_cached_local_channel_data()
+        reset_context()
+        context.offline = True
+        channel = Channel(CHANNEL_URL)
+        subdir = SubdirDataNoPickle(channel)
+        subdir._read_local_repdata(MOD_STAMP["_etag"], MOD_STAMP["_mod"])
+        subdir.query("[version=1.0]")
+
     def time_load_pickle(self):
         os.environ["CONDA_PKGS_DIRS"] = str(CONDA_PKGS_DIR)
         os.environ["CONDA_DEFAULT_THREADS"] = "1"
@@ -91,6 +113,16 @@ class TimeSubdirData:
         sd = SubdirData(channel)
         # sd._read_local_repdata(MOD_STAMP["_etag"], MOD_STAMP["_mod"])
         sd._read_pickled(MOD_STAMP["_etag"], MOD_STAMP["_mod"])
+
+    def time_save_pickle(self):
+        os.environ["CONDA_PKGS_DIRS"] = str(CONDA_PKGS_DIR)
+        os.environ["CONDA_DEFAULT_THREADS"] = "1"
+        SubdirData.clear_cached_local_channel_data()
+        reset_context()
+        context.offline = True
+        channel = Channel(CHANNEL_URL)
+        sd = SubdirData(channel)
+        sd._pickle_me()
 
 
 if __name__ == "__main__":
